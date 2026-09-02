@@ -1,0 +1,12 @@
+# Terraform local state and provider binaries
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+.terraform.lock.hcl
+
+# Build binaries and temporary logs
+*.jar
+*.war
+*.zip
+*.log
