@@ -8,12 +8,11 @@ terraform {
       version = "~> 4.0"
     }
   }
-  
+
   # backend "s3" {
-  #   # Update these values according to your setup
-  #   # bucket = "your-terraform-state-bucket"
-  #   # key    = "java-app/terraform.tfstate"
-  #   # region = "us-east-1"
+  #   bucket = "your-terraform-state-bucket"
+  #   key    = "java-app/terraform.tfstate"
+  #   region = "us-east-1"
   # }
 }
 
@@ -58,9 +57,10 @@ module "rds" {
 module "alb" {
   source = "./modules/alb"
 
-  environment    = var.environment
-  vpc_id         = module.vpc.vpc_id
-  public_subnets = module.vpc.public_subnet_ids
+  environment        = var.environment
+  vpc_id             = module.vpc.vpc_id
+  public_subnets     = module.vpc.public_subnet_ids
+  security_group_ids = [module.security.alb_security_group_id]
 }
 
 # Auto Scaling Group Module
