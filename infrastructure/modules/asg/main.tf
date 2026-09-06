@@ -1,11 +1,13 @@
-# 1. Dynamically retrieve the latest Amazon Linux 2023 AMI via SSM
+# Auto Scaling Group Module
+
+# 1. Dynamically retrieve latest Amazon Linux 2023 AMI via SSM
 data "aws_ssm_parameter" "al2023_ami" {
   name = "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"
 }
 
-# 2. Add an IAM Role & Profile for instance management (SSM / CloudWatch)
+# 2. Add IAM Role & Profile for instance management (SSM / CloudWatch)
 resource "aws_iam_role" "ec2_role" {
-  name_prefix = "${var.environment}-ec2-role-"
+  name = "${var.environment}-ec2-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -25,13 +27,13 @@ resource "aws_iam_role_policy_attachment" "ssm_policy" {
 }
 
 resource "aws_iam_instance_profile" "main" {
-  name_prefix = "${var.environment}-ec2-profile-"
-  role        = aws_iam_role.ec2_role.name
+  name = "${var.environment}-ec2-profile"
+  role = aws_iam_role.ec2_role.name
 }
 
-# 3. Updated Launch Template
+# 3. Launch Template
 resource "aws_launch_template" "main" {
-  name_prefix   = "${var.environment}-lt-"
+  name          = "${var.environment}-app-lt"
   image_id      = data.aws_ssm_parameter.al2023_ami.value
   instance_type = var.instance_type
   key_name      = var.key_name
@@ -53,7 +55,7 @@ resource "aws_launch_template" "main" {
   tag_specifications {
     resource_type = "instance"
     tags = {
-      Name        = "${var.environment}-web-instance"
+      Name        = "${var.environment}-app-server-ec2"
       Environment = var.environment
     }
   }
@@ -63,12 +65,12 @@ resource "aws_launch_template" "main" {
   }
 }
 
-# 4. Auto Scaling Group using launch_template version tracking
+# 4. Auto Scaling Group
 resource "aws_autoscaling_group" "main" {
-  name_prefix         = "${var.environment}-asg-"
-  vpc_zone_identifier = var.private_subnet_ids
-  target_group_arns   = var.target_group_arns
-  health_check_type   = "ELB"
+  name                      = "${var.environment}-app-asg"
+  vpc_zone_identifier       = var.private_subnet_ids
+  target_group_arns         = var.target_group_arns
+  health_check_type         = "ELB"
   health_check_grace_period = 300
 
   min_size         = var.min_size
@@ -77,13 +79,12 @@ resource "aws_autoscaling_group" "main" {
 
   launch_template {
     id      = aws_launch_template.main.id
-    version = aws_launch_template.main.latest_version
+    version = "$Latest"
   }
 
-  # Cleaned up inline tags (managed by launch_template.tag_specifications instead)
   dynamic "tag" {
     for_each = {
-      Name        = "${var.environment}-web-instance"
+      Name        = "${var.environment}-app-server-ec2"
       Environment = var.environment
     }
     content {
