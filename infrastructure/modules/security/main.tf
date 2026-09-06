@@ -1,8 +1,8 @@
 # Security Groups Module
 
-# ALB Security Group
+# 1. ALB Security Group
 resource "aws_security_group" "alb" {
-  name_prefix = "${var.environment}-alb-sg-"
+  name        = "${var.environment}-alb-sg"
   description = "Security group for application load balancer"
   vpc_id      = var.vpc_id
 
@@ -37,9 +37,9 @@ resource "aws_security_group" "alb" {
   }
 }
 
-# Bastion Host Security Group (Moved up so app SG can reference it cleanly)
+# 2. Bastion Host Security Group
 resource "aws_security_group" "bastion" {
-  name_prefix = "${var.environment}-bastion-sg-"
+  name        = "${var.environment}-bastion-sg"
   description = "Security group for bastion host"
   vpc_id      = var.vpc_id
 
@@ -67,9 +67,9 @@ resource "aws_security_group" "bastion" {
   }
 }
 
-# Application Security Group
+# 3. Application Security Group
 resource "aws_security_group" "app" {
-  name_prefix = "${var.environment}-app-sg-"
+  name        = "${var.environment}-app-sg"
   description = "Security group for application servers"
   vpc_id      = var.vpc_id
 
@@ -104,9 +104,9 @@ resource "aws_security_group" "app" {
   }
 }
 
-# Database Security Group
+# 4. Database Security Group
 resource "aws_security_group" "db" {
-  name_prefix = "${var.environment}-db-sg-"
+  name        = "${var.environment}-db-sg"
   description = "Security group for database"
   vpc_id      = var.vpc_id
 
